@@ -24,7 +24,7 @@ export function QrPreview({
   const [dataUrl, setDataUrl] = useState("");
   const resolvedSize = compact ? "compact" : size;
   const qrWidth =
-    resolvedSize === "compact" ? 180 : resolvedSize === "showcase" ? 360 : 320;
+    resolvedSize === "compact" ? 180 : resolvedSize === "showcase" ? 280 : 320;
 
   useEffect(() => {
     let isActive = true;
@@ -53,7 +53,7 @@ export function QrPreview({
         resolvedSize === "compact"
           ? "w-[140px] p-4"
           : resolvedSize === "showcase"
-            ? "w-full max-w-[360px] p-5 shadow-halo"
+            ? "w-full max-w-[312px] p-4 shadow-halo"
             : "w-full max-w-[280px] p-4"
       }`}
     >
@@ -72,7 +72,7 @@ export function QrPreview({
               <p className="text-xs uppercase tracking-[0.18em] text-black/45">
                 Scan-ready QR
               </p>
-              <p className="mt-2 font-display text-xl font-semibold text-[var(--color-ink)]">
+              <p className="mt-2 font-display text-lg font-semibold leading-tight text-[var(--color-ink)]">
                 {label}
               </p>
             </div>
@@ -81,7 +81,7 @@ export function QrPreview({
             href={dataUrl}
             download={`${downloadName}.png`}
             className={`mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--color-ink)] px-4 font-semibold text-white transition hover:bg-black ${
-              resolvedSize === "showcase" ? "py-3 text-base" : "py-2 text-sm"
+              resolvedSize === "showcase" ? "py-3 text-sm" : "py-2 text-sm"
             }`}
           >
             {downloadLabel}

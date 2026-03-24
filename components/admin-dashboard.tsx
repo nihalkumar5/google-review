@@ -1012,212 +1012,218 @@ export function AdminDashboard({
                 return (
                   <article
                     key={business.id}
-                    className="grid gap-6 px-6 py-6 sm:px-8 lg:grid-cols-[0.92fr_1.08fr]"
+                    className="px-6 py-7 sm:px-8"
                   >
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-display text-2xl font-semibold text-white">
-                          {business.name}
-                        </h3>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getTypeAccent(
-                            business.type
-                          )}`}
-                        >
-                          {getBusinessTypeLabel(business.type, locale)}
-                        </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
-                            business.plan
-                          )}`}
-                        >
-                          {getPlanLabel(business.plan, t)}
-                        </span>
-                      </div>
-
-                      <div className="grid gap-3 text-sm text-[var(--color-muted)] sm:grid-cols-2">
-                        <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                            {t("admin.slugPreview")}
-                          </p>
-                          <p className="mt-2 break-all font-medium text-white">
-                            /r/{business.slug}
-                          </p>
-                        </div>
-                        <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                            {t("admin.whatsapp")}
-                          </p>
-                          <p className="mt-2 break-all font-medium text-white">
-                            {business.whatsappNumber}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {t("admin.googleDestination")}
-                        </p>
-                        <p className="mt-2 break-all text-sm leading-6 text-white/80">
-                          {business.googleReviewLink}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {t("admin.reviewPageLink")}
-                        </p>
-                        <p className="mt-2 break-all text-sm leading-6 text-white/80">
-                          {reviewPageLink}
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleCopy(reviewPageLink, `${business.id}-review-link`)
-                            }
-                            className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_312px] xl:items-start">
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="font-display text-2xl font-semibold text-white">
+                            {business.name}
+                          </h3>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getTypeAccent(
+                              business.type
+                            )}`}
                           >
-                            {copiedKey === `${business.id}-review-link`
-                              ? t("common.copied")
-                              : t("common.copy")}
-                          </button>
-                          <a
-                            href={reviewPagePath}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px]"
+                            {getBusinessTypeLabel(business.type, locale)}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
+                              business.plan
+                            )}`}
                           >
-                            {t("admin.open")}
-                          </a>
+                            {getPlanLabel(business.plan, t)}
+                          </span>
                         </div>
 
-                        <div className="mt-5 flex justify-center lg:justify-start">
-                          <QrPreview
-                            url={reviewPageLink}
-                            label={business.name}
-                            downloadName={business.slug}
-                            downloadLabel={t("admin.download")}
-                            size="showcase"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                            {t("admin.totalScans")}
-                          </p>
-                          <p className="mt-3 font-display text-3xl font-semibold text-white">
-                            {business.analytics.scans}
-                          </p>
-                        </div>
-                        <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                            {t("admin.positive")}
-                          </p>
-                          <p className="mt-3 font-display text-3xl font-semibold text-white">
-                            {business.analytics.positiveClicks}
-                          </p>
-                        </div>
-                        <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                            {t("admin.negative")}
-                          </p>
-                          <p className="mt-3 font-display text-3xl font-semibold text-white">
-                            {business.analytics.negativeClicks}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
+                        <div className="grid gap-4 text-sm text-[var(--color-muted)] sm:grid-cols-2">
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
                             <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                              {t("admin.latestPayment")}
+                              {t("admin.slugPreview")}
                             </p>
-                            {latestPayment ? (
-                              <>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                  <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
-                                    {formatInrAmount(latestPayment.amount, locale)}
-                                  </span>
-                                  <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
-                                    {getPaymentModeLabel(latestPayment.mode, t)}
-                                  </span>
-                                </div>
-                                <p className="mt-3 break-all text-sm leading-6 text-white/80">
-                                  {t("admin.paymentReference")}:{" "}
-                                  {latestPayment.paymentId || latestPayment.orderId}
-                                </p>
-                              </>
-                            ) : (
-                              <p className="mt-2 text-sm leading-6 text-white/80">
-                                {t("admin.noPaymentHistory")}
-                              </p>
-                            )}
+                            <p className="mt-2 break-all font-medium text-white">
+                              /r/{business.slug}
+                            </p>
+                          </div>
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.whatsapp")}
+                            </p>
+                            <p className="mt-2 break-all font-medium text-white">
+                              {business.whatsappNumber}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.googleDestination")}
+                            </p>
+                            <p className="mt-2 break-all text-sm leading-6 text-white/80">
+                              {business.googleReviewLink}
+                            </p>
                           </div>
 
-                          {business.plan === "basic" ? (
+                          <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                                  {t("admin.latestPayment")}
+                                </p>
+                                {latestPayment ? (
+                                  <>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                      <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
+                                        {formatInrAmount(latestPayment.amount, locale)}
+                                      </span>
+                                      <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
+                                        {getPaymentModeLabel(latestPayment.mode, t)}
+                                      </span>
+                                    </div>
+                                    <p className="mt-3 break-all text-sm leading-6 text-white/80">
+                                      {t("admin.paymentReference")}:{" "}
+                                      {latestPayment.paymentId || latestPayment.orderId}
+                                    </p>
+                                  </>
+                                ) : (
+                                  <p className="mt-2 text-sm leading-6 text-white/80">
+                                    {t("admin.noPaymentHistory")}
+                                  </p>
+                                )}
+                              </div>
+
+                              {business.plan === "basic" ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpgrade(business)}
+                                  disabled={actionState !== null || !checkoutReady}
+                                  className="rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+                                >
+                                  {activeUpgradeId === business.id
+                                    ? t("admin.upgrading")
+                                    : t("admin.upgradeToPro", { amount: upgradePrice })}
+                                </button>
+                              ) : (
+                                <span className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white/75">
+                                  {t("admin.paymentActive")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.totalScans")}
+                            </p>
+                            <p className="mt-3 font-display text-3xl font-semibold text-white">
+                              {business.analytics.scans}
+                            </p>
+                          </div>
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.positive")}
+                            </p>
+                            <p className="mt-3 font-display text-3xl font-semibold text-white">
+                              {business.analytics.positiveClicks}
+                            </p>
+                          </div>
+                          <div className="rounded-[22px] border border-white/10 bg-black/10 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.negative")}
+                            </p>
+                            <p className="mt-3 font-display text-3xl font-semibold text-white">
+                              {business.analytics.negativeClicks}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
+                          <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.planIncludes")}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {features.map((feature) => (
+                                <span
+                                  key={feature}
+                                  className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
+                                >
+                                  {feature}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {business.plan === "pro"
+                                ? t("admin.proFlowTitle")
+                                : t("admin.basicFlowTitle")}
+                            </p>
+                            <p className="mt-2 text-sm leading-6 text-white/80">
+                              {business.plan === "pro"
+                                ? t("admin.proFlowBody")
+                                : t("admin.basicFlowBody")}
+                            </p>
+                            {business.plan === "pro" ? (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {suggestions.map((suggestion) => (
+                                  <span
+                                    key={suggestion}
+                                    className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
+                                  >
+                                    {suggestion}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 xl:justify-self-end">
+                        <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                            {t("admin.reviewPageLink")}
+                          </p>
+                          <p className="mt-2 break-all text-sm leading-6 text-white/80">
+                            {reviewPageLink}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
                             <button
                               type="button"
-                              onClick={() => handleUpgrade(business)}
-                              disabled={actionState !== null || !checkoutReady}
-                              className="rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+                              onClick={() =>
+                                handleCopy(reviewPageLink, `${business.id}-review-link`)
+                              }
+                              className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
                             >
-                              {activeUpgradeId === business.id
-                                ? t("admin.upgrading")
-                                : t("admin.upgradeToPro", { amount: upgradePrice })}
+                              {copiedKey === `${business.id}-review-link`
+                                ? t("common.copied")
+                                : t("common.copy")}
                             </button>
-                          ) : (
-                            <span className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white/75">
-                              {t("admin.paymentActive")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {t("admin.planIncludes")}
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {features.map((feature) => (
-                            <span
-                              key={feature}
-                              className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
+                            <a
+                              href={reviewPagePath}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px]"
                             >
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {business.plan === "pro"
-                            ? t("admin.proFlowTitle")
-                            : t("admin.basicFlowTitle")}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-white/80">
-                          {business.plan === "pro"
-                            ? t("admin.proFlowBody")
-                            : t("admin.basicFlowBody")}
-                        </p>
-                        {business.plan === "pro" ? (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {suggestions.map((suggestion) => (
-                              <span
-                                key={suggestion}
-                                className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
-                              >
-                                {suggestion}
-                              </span>
-                            ))}
+                              {t("admin.open")}
+                            </a>
                           </div>
-                        ) : null}
+
+                          <div className="mt-5 flex justify-center">
+                            <QrPreview
+                              url={reviewPageLink}
+                              label={business.name}
+                              downloadName={business.slug}
+                              downloadLabel={t("admin.download")}
+                              size="showcase"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>
