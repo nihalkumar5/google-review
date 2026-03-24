@@ -45,5 +45,58 @@
         "negativeClicks": 4
       }
     }
+  ],
+  "payments": [
+    {
+      "id": "payment-1",
+      "mode": "create",
+      "status": "paid",
+      "plan": "basic",
+      "amount": 19900,
+      "currency": "INR",
+      "orderId": "order_sample_basic",
+      "receipt": "basic_sunrise_1",
+      "businessId": "sample-1",
+      "businessSlug": "sunrise-dental-studio",
+      "businessName": "Sunrise Dental Studio",
+      "paymentId": "pay_sample_basic",
+      "signature": "sample_signature_basic",
+      "createdAt": "2026-03-24T10:25:00.000Z",
+      "paidAt": "2026-03-24T10:26:00.000Z"
+    },
+    {
+      "id": "payment-2",
+      "mode": "create",
+      "status": "paid",
+      "plan": "pro",
+      "amount": 39900,
+      "currency": "INR",
+      "orderId": "order_sample_pro_cafe",
+      "receipt": "pro_urbanbrew_1",
+      "businessId": "sample-2",
+      "businessSlug": "urban-brew-cafe",
+      "businessName": "Urban Brew Cafe",
+      "paymentId": "pay_sample_pro_cafe",
+      "signature": "sample_signature_pro_cafe",
+      "createdAt": "2026-03-23T08:10:00.000Z",
+      "paidAt": "2026-03-23T08:11:00.000Z"
+    },
+    {
+      "id": "payment-3",
+      "mode": "create",
+      "status": "paid",
+      "plan": "pro",
+      "amount": 39900,
+      "currency": "INR",
+      "orderId": "order_sample_pro_gym",
+      "receipt": "pro_motionfit_1",
+      "businessId": "sample-3",
+      "businessSlug": "motion-fit-gym",
+      "businessName": "Motion Fit Gym",
+      "paymentId": "pay_sample_pro_gym",
+      "signature": "sample_signature_pro_gym",
+      "createdAt": "2026-03-22T06:55:00.000Z",
+      "paidAt": "2026-03-22T06:56:00.000Z"
+    }
   ]
 }

@@ -2,10 +2,12 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import Script from "next/script";
 
 import { QrPreview } from "@/components/qr-preview";
 import { SiteHeader } from "@/components/site-header";
 import { useLanguage } from "@/components/language-provider";
+import { formatInrAmount, getPlanPricePaisa, getUpgradePricePaisa } from "@/lib/billing";
 import {
   businessTypeValues,
   getBusinessTypeLabel,
@@ -14,9 +16,11 @@ import {
 import { buildReviewPath } from "@/lib/site";
 import { buildSlugPreview } from "@/lib/slug";
 import type { Business, BusinessType, PlanType } from "@/types/business";
+import type { PaymentMode, PaymentRecord } from "@/types/payment";
 
 type AdminDashboardProps = {
   initialBusinesses: Business[];
+  initialPayments: PaymentRecord[];
 };
 
 type FormState = {
@@ -29,6 +33,68 @@ type FormState = {
 
 type FilterValue = "all" | BusinessType;
 type Translator = (key: string, values?: Record<string, string | number>) => string;
+type ActionState =
+  | {
+      kind: "create";
+    }
+  | {
+      kind: "upgrade";
+      businessId: string;
+    }
+  | null;
+
+type OrderResponse = {
+  keyId: string;
+  mode: PaymentMode;
+  plan: PlanType;
+  businessName: string;
+  description: string;
+  order: {
+    id: string;
+    amount: number;
+    currency: string;
+  };
+  prefill?: {
+    name?: string;
+    contact?: string;
+  };
+};
+
+type VerifyResponse = {
+  business: Business;
+  payment: PaymentRecord;
+};
+
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayCheckoutOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpaySuccessResponse) => void | Promise<void>;
+  prefill?: {
+    name?: string;
+    contact?: string;
+  };
+  notes?: Record<string, string>;
+  modal?: {
+    ondismiss?: () => void;
+  };
+  theme?: {
+    color: string;
+  };
+};
+
+type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => {
+  open: () => void;
+};
 
 const defaultForm: FormState = {
   name: "",
@@ -65,10 +131,6 @@ function getPlanLabel(plan: PlanType, t: Translator) {
   return t(plan === "pro" ? "common.pro" : "common.basic");
 }
 
-function getPlanPrice(plan: PlanType, t: Translator) {
-  return t(plan === "pro" ? "admin.proPrice" : "admin.basicPrice");
-}
-
 function getPlanSummary(plan: PlanType, t: Translator) {
   return t(plan === "pro" ? "admin.proSummary" : "admin.basicSummary");
 }
@@ -88,12 +150,48 @@ function getPlanFeatures(plan: PlanType, t: Translator) {
       ];
 }
 
-export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
+function getPaymentModeLabel(mode: PaymentMode, t: Translator) {
+  return t(mode === "upgrade" ? "admin.paymentModeUpgrade" : "admin.paymentModeCreate");
+}
+
+function formatDateStamp(value: string) {
+  return value.slice(0, 10);
+}
+
+function upsertBusiness(businesses: Business[], business: Business) {
+  const existingIndex = businesses.findIndex((entry) => entry.id === business.id);
+
+  if (existingIndex === -1) {
+    return [business, ...businesses];
+  }
+
+  return businesses.map((entry) => (entry.id === business.id ? business : entry));
+}
+
+function upsertPayment(payments: PaymentRecord[], payment: PaymentRecord) {
+  const existingIndex = payments.findIndex((entry) => entry.id === payment.id);
+
+  if (existingIndex === -1) {
+    return [payment, ...payments];
+  }
+
+  return payments.map((entry) => (entry.id === payment.id ? payment : entry));
+}
+
+async function readErrorMessage(response: Response, fallback: string) {
+  const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+  return payload?.error || fallback;
+}
+
+export function AdminDashboard({
+  initialBusinesses,
+  initialPayments
+}: AdminDashboardProps) {
   const { t, locale } = useLanguage();
   const [businesses, setBusinesses] = useState(initialBusinesses);
+  const [payments, setPayments] = useState(initialPayments);
   const [createdBusiness, setCreatedBusiness] = useState<Business | null>(null);
   const [form, setForm] = useState<FormState>(defaultForm);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -101,6 +199,8 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
   const [copiedKey, setCopiedKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  const [actionState, setActionState] = useState<ActionState>(null);
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
@@ -113,6 +213,14 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
     filter === "all"
       ? businesses
       : businesses.filter((business) => business.type === filter);
+  const paidPayments = payments.filter((payment) => payment.status === "paid");
+  const latestPaymentByBusiness = paidPayments.reduce((map, payment) => {
+    if (payment.businessId && !map.has(payment.businessId)) {
+      map.set(payment.businessId, payment);
+    }
+
+    return map;
+  }, new Map<string, PaymentRecord>());
   const totals = businesses.reduce(
     (accumulator, business) => ({
       scans: accumulator.scans + business.analytics.scans,
@@ -131,6 +239,10 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
       proCount: 0
     }
   );
+  const totalRevenue = paidPayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
   const highlightedBusiness = createdBusiness ?? businesses[0] ?? null;
   const highlightedType = highlightedBusiness?.type ?? form.type;
   const highlightedPlan = highlightedBusiness?.plan ?? form.plan;
@@ -141,6 +253,15 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
   const highlightedSuggestions =
     highlightedPlan === "pro" ? getReviewSuggestions(highlightedType, locale) : [];
   const highlightedPlanFeatures = getPlanFeatures(highlightedPlan, t);
+  const highlightedPayment = highlightedBusiness
+    ? latestPaymentByBusiness.get(highlightedBusiness.id) || null
+    : null;
+  const selectedPlanPrice = formatInrAmount(
+    getPlanPricePaisa(form.plan),
+    locale
+  );
+  const isCreating = actionState?.kind === "create";
+  const activeUpgradeId = actionState?.kind === "upgrade" ? actionState.businessId : "";
 
   async function handleCopy(value: string, key: string) {
     await navigator.clipboard.writeText(value);
@@ -148,44 +269,178 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
     window.setTimeout(() => setCopiedKey(""), 1400);
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setMessage(null);
-
+  async function verifyPayment(
+    razorpayResponse: RazorpaySuccessResponse,
+    currentAction: Exclude<ActionState, null>
+  ) {
     try {
-      const response = await fetch("/api/businesses", {
+      const response = await fetch("/api/payments/verify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify(razorpayResponse)
       });
 
       if (!response.ok) {
-        throw new Error();
+        throw new Error(
+          await readErrorMessage(response, t("admin.paymentVerifyError"))
+        );
       }
 
-      const payload = (await response.json()) as { business: Business };
-      setBusinesses((current) => [payload.business, ...current]);
+      const payload = (await response.json()) as VerifyResponse;
+      setBusinesses((current) => upsertBusiness(current, payload.business));
+      setPayments((current) => upsertPayment(current, payload.payment));
       setCreatedBusiness(payload.business);
-      setForm(defaultForm);
+
+      if (currentAction.kind === "create") {
+        setForm(defaultForm);
+      }
+
       setMessage({
         type: "success",
-        text: t("admin.success")
+        text:
+          currentAction.kind === "create"
+            ? t("admin.paymentSuccessCreate")
+            : t("admin.paymentSuccessUpgrade")
       });
-    } catch {
+    } catch (error) {
       setMessage({
         type: "error",
-        text: t("admin.error")
+        text:
+          error instanceof Error ? error.message : t("admin.paymentVerifyError")
       });
     } finally {
-      setSubmitting(false);
+      setActionState(null);
     }
+  }
+
+  function openCheckout(payload: OrderResponse, currentAction: Exclude<ActionState, null>) {
+    const Razorpay = (
+      window as Window & {
+        Razorpay?: RazorpayConstructor;
+      }
+    ).Razorpay;
+
+    if (!Razorpay) {
+      setActionState(null);
+      setMessage({
+        type: "error",
+        text: t("admin.checkoutUnavailable")
+      });
+      return;
+    }
+
+    const checkout = new Razorpay({
+      key: payload.keyId,
+      amount: payload.order.amount,
+      currency: payload.order.currency,
+      name: t("common.appName"),
+      description: payload.description,
+      order_id: payload.order.id,
+      prefill: payload.prefill,
+      notes: {
+        businessName: payload.businessName,
+        plan: payload.plan,
+        mode: payload.mode
+      },
+      theme: {
+        color: "#f4b73c"
+      },
+      modal: {
+        ondismiss: () => {
+          setActionState(null);
+          setMessage({
+            type: "error",
+            text: t("admin.checkoutDismissed")
+          });
+        }
+      },
+      handler: async (response) => {
+        await verifyPayment(response, currentAction);
+      }
+    });
+
+    checkout.open();
+  }
+
+  async function startCheckout(
+    requestBody: Record<string, string>,
+    currentAction: Exclude<ActionState, null>
+  ) {
+    if (!checkoutReady) {
+      setMessage({
+        type: "error",
+        text: t("admin.checkoutLoading")
+      });
+      return;
+    }
+
+    setActionState(currentAction);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/payments/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, t("admin.paymentOrderError")));
+      }
+
+      const payload = (await response.json()) as OrderResponse;
+      openCheckout(payload, currentAction);
+    } catch (error) {
+      setActionState(null);
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : t("admin.paymentOrderError")
+      });
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await startCheckout(
+      {
+        mode: "create",
+        name: form.name,
+        type: form.type,
+        plan: form.plan,
+        googleReviewLink: form.googleReviewLink,
+        whatsappNumber: form.whatsappNumber
+      },
+      {
+        kind: "create"
+      }
+    );
+  }
+
+  async function handleUpgrade(business: Business) {
+    await startCheckout(
+      {
+        mode: "upgrade",
+        businessId: business.id
+      },
+      {
+        kind: "upgrade",
+        businessId: business.id
+      }
+    );
   }
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+        onLoad={() => setCheckoutReady(true)}
+      />
       <div className="mesh" />
       <SiteHeader current="admin" />
 
@@ -202,7 +457,7 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
           </div>
 
           <div className="section-frame rounded-[30px] px-5 py-5">
-            <div className="grid gap-5 text-center sm:grid-cols-4">
+            <div className="grid gap-5 text-center sm:grid-cols-5">
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-[var(--color-muted)]">
                   {t("admin.activePages")}
@@ -235,6 +490,14 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                   {totals.negativeClicks}
                 </p>
               </div>
+              <div>
+                <p className="text-sm uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                  {t("admin.totalRevenue")}
+                </p>
+                <p className="mt-2 font-display text-4xl font-semibold text-white">
+                  {formatInrAmount(totalRevenue, locale)}
+                </p>
+              </div>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4 text-sm text-[var(--color-muted)]">
@@ -243,6 +506,12 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
               </span>
               <span className="rounded-full border border-white/10 px-3 py-1">
                 {totals.proCount} {t("common.pro")}
+              </span>
+              <span className="rounded-full border border-white/10 px-3 py-1">
+                {paidPayments.length} {t("admin.successfulPayments")}
+              </span>
+              <span className="rounded-full border border-white/10 px-3 py-1">
+                {checkoutReady ? t("admin.billingReady") : t("admin.checkoutLoading")}
               </span>
             </div>
           </div>
@@ -345,7 +614,7 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                               {getPlanLabel(plan, t)}
                             </p>
                             <p className="mt-1 text-sm text-[var(--color-gold-soft)]">
-                              {getPlanPrice(plan, t)}
+                              {formatInrAmount(getPlanPricePaisa(plan), locale)}
                             </p>
                           </div>
                           <span
@@ -464,6 +733,23 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                 )}
               </div>
 
+              <div className="rounded-[28px] border border-[rgba(244,183,60,0.18)] bg-[rgba(244,183,60,0.07)] p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-gold-soft)]">
+                  {t("admin.paymentRequired")}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+                  {t("admin.paymentHelper")}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-black/20 px-4 py-2 text-sm font-semibold text-white">
+                    {getPlanLabel(form.plan, t)}
+                  </span>
+                  <span className="rounded-full bg-black/20 px-4 py-2 text-sm font-semibold text-white">
+                    {selectedPlanPrice}
+                  </span>
+                </div>
+              </div>
+
               {message ? (
                 <div
                   className={`rounded-2xl px-4 py-3 text-sm ${
@@ -478,10 +764,14 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={actionState !== null || !checkoutReady}
                 className="inline-flex items-center justify-center rounded-full bg-[var(--color-gold)] px-6 py-3 text-base font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px] hover:shadow-halo disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {submitting ? t("admin.creating") : t("admin.submit")}
+                {!checkoutReady
+                  ? t("admin.checkoutLoading")
+                  : isCreating
+                    ? t("admin.startingPayment")
+                    : t("admin.payAndCreate", { amount: selectedPlanPrice })}
               </button>
             </form>
           </div>
@@ -601,6 +891,35 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
 
                 <div className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                    {t("admin.latestPayment")}
+                  </p>
+                  {highlightedPayment ? (
+                    <>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-black/70">
+                          {formatInrAmount(highlightedPayment.amount, locale)}
+                        </span>
+                        <span className="rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-black/70">
+                          {getPaymentModeLabel(highlightedPayment.mode, t)}
+                        </span>
+                        <span className="rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-black/70">
+                          {formatDateStamp(highlightedPayment.paidAt || highlightedPayment.createdAt)}
+                        </span>
+                      </div>
+                      <p className="mt-3 break-all text-sm leading-6 text-black/70">
+                        {t("admin.paymentReference")}:{" "}
+                        {highlightedPayment.paymentId || highlightedPayment.orderId}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm leading-6 text-black/65">
+                      {t("admin.noPaymentHistory")}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-black/45">
                     {highlightedPlan === "pro"
                       ? t("admin.proFlowTitle")
                       : t("admin.basicFlowTitle")}
@@ -684,6 +1003,11 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                   business.plan === "pro"
                     ? getReviewSuggestions(business.type, locale)
                     : [];
+                const latestPayment = latestPaymentByBusiness.get(business.id) || null;
+                const upgradePrice = formatInrAmount(
+                  getUpgradePricePaisa(business.plan, "pro"),
+                  locale
+                );
 
                 return (
                   <article
@@ -795,6 +1119,53 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                           <p className="mt-3 font-display text-3xl font-semibold text-white">
                             {business.analytics.negativeClicks}
                           </p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                              {t("admin.latestPayment")}
+                            </p>
+                            {latestPayment ? (
+                              <>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
+                                    {formatInrAmount(latestPayment.amount, locale)}
+                                  </span>
+                                  <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75">
+                                    {getPaymentModeLabel(latestPayment.mode, t)}
+                                  </span>
+                                </div>
+                                <p className="mt-3 break-all text-sm leading-6 text-white/80">
+                                  {t("admin.paymentReference")}:{" "}
+                                  {latestPayment.paymentId || latestPayment.orderId}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="mt-2 text-sm leading-6 text-white/80">
+                                {t("admin.noPaymentHistory")}
+                              </p>
+                            )}
+                          </div>
+
+                          {business.plan === "basic" ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUpgrade(business)}
+                              disabled={actionState !== null || !checkoutReady}
+                              className="rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {activeUpgradeId === business.id
+                                ? t("admin.upgrading")
+                                : t("admin.upgradeToPro", { amount: upgradePrice })}
+                            </button>
+                          ) : (
+                            <span className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white/75">
+                              {t("admin.paymentActive")}
+                            </span>
+                          )}
                         </div>
                       </div>
 

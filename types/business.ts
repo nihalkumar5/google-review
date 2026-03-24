@@ -1,3 +1,5 @@
+import type { PaymentRecord } from "@/types/payment";
+
 export const businessTypes = ["cafe", "salon", "clinic", "gym", "hotel"] as const;
 export const planTypes = ["basic", "pro"] as const;
 
@@ -24,6 +26,7 @@ export type Business = {
 
 export type Database = {
   businesses: Business[];
+  payments: PaymentRecord[];
 };
 
 export type CreateBusinessInput = {
