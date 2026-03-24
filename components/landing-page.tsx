@@ -45,8 +45,6 @@ const steps = [
   }
 ];
 
-const previewTypes = ["cafe", "salon", "clinic"] as const;
-
 export function LandingPage() {
   const { t, locale } = useLanguage();
   const heroTheme = getBusinessTheme("cafe");
@@ -63,10 +61,10 @@ export function LandingPage() {
       <section className="relative min-h-[100svh]" style={heroThemeStyle}>
         <SiteHeader current="home" />
 
-        <div className="mx-auto grid min-h-[calc(100svh-112px)] w-full max-w-7xl items-center gap-12 px-5 pb-16 pt-4 sm:px-8 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:pb-20">
+        <div className="mx-auto grid min-h-[calc(100svh-112px)] w-full max-w-7xl items-center gap-10 px-5 pb-14 pt-6 sm:px-8 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:gap-14 lg:pb-16">
           <div className="max-w-xl">
             <div className="eyebrow animate-fade-up">{t("landing.badge")}</div>
-            <h1 className="mt-6 font-display text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-white sm:text-6xl lg:text-[5.1rem]">
+            <h1 className="mt-6 font-display text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-white sm:text-6xl lg:text-[4.6rem]">
               {t("landing.headline")}
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-[var(--color-muted)] sm:text-lg">
@@ -109,25 +107,39 @@ export function LandingPage() {
               })}
             </div>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {features.map((feature) => (
-                <div
-                  key={feature.titleKey}
-                  className="rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-4"
-                >
-                  <p className="text-sm font-semibold text-white">
-                    {t(feature.titleKey)}
-                  </p>
-                </div>
-              ))}
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                  SaaS
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  One product for every location
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                  Routing
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  Google for praise, WhatsApp for fixes
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                  Plans
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  Basic for speed, Pro for conversion
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="relative min-h-[540px] lg:min-h-[620px]">
+          <div className="relative">
             <div className="theme-orb right-[-2rem] top-10 h-48 w-48 bg-[var(--theme-glow)]" />
-            <div className="glass-pod hero-grid theme-shell relative h-full rounded-[42px] p-4 sm:p-5">
-              <div className="grid h-full gap-5 lg:grid-cols-[0.42fr_0.58fr]">
-                <div className="float-soft flex flex-col justify-between rounded-[32px] border border-white/10 bg-black/20 p-5">
+            <div className="glass-pod hero-grid theme-shell relative rounded-[42px] p-4 sm:p-5 lg:p-6">
+              <div className="grid gap-5 xl:grid-cols-[0.44fr_0.56fr]">
+                <div className="rounded-[32px] border border-white/10 bg-black/20 p-5">
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-muted)]">
                       /r/urban-brew-cafe
@@ -140,8 +152,21 @@ export function LandingPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-[30px] bg-[var(--color-paper)] p-4 text-[var(--color-ink)]">
-                    <div className="grid grid-cols-5 gap-2">
+                  <div className="mt-6 rounded-[30px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-black/45">
+                          QR destination
+                        </p>
+                        <p className="mt-2 text-base font-semibold">
+                          Direct review page
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-black/5 px-4 py-2 text-sm font-semibold">
+                        /r/[slug]
+                      </span>
+                    </div>
+                    <div className="mt-5 grid grid-cols-5 gap-2">
                       {Array.from({ length: 25 }).map((_, index) => (
                         <div
                           key={index}
@@ -153,7 +178,7 @@ export function LandingPage() {
                         />
                       ))}
                     </div>
-                    <div className="mt-4 grid gap-3">
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-[20px] bg-black/5 px-4 py-3">
                         <p className="text-xs uppercase tracking-[0.2em] text-black/45">
                           Flow
@@ -162,33 +187,25 @@ export function LandingPage() {
                           Scan → choose → review
                         </p>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-[20px] bg-black/5 px-4 py-3">
-                          <p className="text-xs uppercase tracking-[0.2em] text-black/45">
-                            Plans
-                          </p>
-                          <p className="mt-1 text-sm font-semibold">Basic + Pro</p>
-                        </div>
-                        <div className="rounded-[20px] bg-black/5 px-4 py-3">
-                          <p className="text-xs uppercase tracking-[0.2em] text-black/45">
-                            Output
-                          </p>
-                          <p className="mt-1 text-sm font-semibold">Google + WhatsApp</p>
-                        </div>
+                      <div className="rounded-[20px] bg-black/5 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-black/45">
+                          Output
+                        </p>
+                        <p className="mt-1 text-sm font-semibold">Google + WhatsApp</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col rounded-[34px] bg-[rgba(13,13,13,0.74)] p-5 text-white">
+                <div className="flex flex-col rounded-[34px] bg-[rgba(13,13,13,0.74)] p-5 text-white lg:p-6">
                   <div className="flex items-center justify-between gap-3">
                     <div className="eyebrow border-white/10 text-[var(--color-muted)]">
                       Urban Brew Cafe
                     </div>
                     <div className="min-w-[160px]">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        <span>Step 1</span>
-                        <span>of 2</span>
+                        <span>Step 1 of 2</span>
+                        <span>54%</span>
                       </div>
                       <div className="progress-track mt-2">
                         <span style={{ width: "54%" }} />
@@ -201,7 +218,7 @@ export function LandingPage() {
                       name: "Urban Brew Cafe"
                     })}
                   </h2>
-                  <p className="mt-3 max-w-md text-sm leading-6 text-[var(--color-muted)]">
+                  <p className="mt-3 max-w-lg text-sm leading-6 text-[var(--color-muted)]">
                     Emotion first, then the action. Happy customers go public, unhappy ones go private.
                   </p>
 
@@ -234,10 +251,15 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-6">
-                    <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-muted)]">
-                      {t("review.suggestionsTitle")}
-                    </p>
+                  <div className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.03] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-muted)]">
+                        {t("review.suggestionsTitle")}
+                      </p>
+                      <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/70">
+                        Pro assist
+                      </span>
+                    </div>
                     <div className="quick-scroll mt-4">
                       {previewSuggestions.map((suggestion) => (
                         <div
@@ -251,33 +273,6 @@ export function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="absolute -bottom-4 left-6 right-6 hidden gap-3 lg:flex">
-              {previewTypes.map((type) => {
-                const theme = getBusinessTheme(type);
-
-                return (
-                  <div
-                    key={type}
-                    style={
-                      {
-                        borderColor: theme.border,
-                        color: theme.secondary,
-                        background: "rgba(255,255,255,0.06)"
-                      } as CSSProperties
-                    }
-                    className="glass-pod flex-1 rounded-[26px] px-4 py-4"
-                  >
-                    <p className="text-xs uppercase tracking-[0.18em] opacity-70">
-                      {getBusinessTypeLabel(type, locale)}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-white">
-                      {t(type === "cafe" ? "landing.featureTwoTitle" : "landing.featureOneTitle")}
-                    </p>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>

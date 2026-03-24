@@ -2,6 +2,8 @@
 .next-app
 node_modules
 .vercel
+.env.local
+.env*.local
 dist
 tsconfig.tsbuildinfo
 npm-debug.log*
