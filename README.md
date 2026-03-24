@@ -15,13 +15,15 @@ Production-ready multi-tenant MVP for local businesses that want to grow Google 
 - Landing page with clear CTA
 - Dynamic `/r/[slug]` review pages per business
 - Business types: cafe, salon, clinic, gym, hotel
-- Smart review suggestions based on business type
-- Multi-client admin panel with auto-generated slugs
+- Plan-based feature unlocks: `basic` and `pro`
+- Smart review suggestions based on business type for Pro businesses
+- Multi-client admin panel with auto-generated slugs and plan selection
 - Downloadable QR codes for direct review links
 - Basic analytics for scans and click sentiment
 - English and Hindi toggle using JSON translations
 - Mobile-first UI
-- Suggestion copy helpers on the public review page
+- Pro-only photo booster step before Google review
+- Suggestion copy helpers on the public review page for Pro businesses
 
 ## Folder Structure
 
@@ -101,9 +103,9 @@ npm run dev
 
 The app auto-seeds from `data/seed.json` the first time it runs. The sample businesses include:
 
-- `Sunrise Dental Studio`
-- `Urban Brew Cafe`
-- `Motion Fit Gym`
+- `Sunrise Dental Studio` on `basic`
+- `Urban Brew Cafe` on `pro`
+- `Motion Fit Gym` on `pro`
 
 Use the seeded demo review flow at:
 
@@ -137,4 +139,6 @@ That makes deployment easy for demos and low-risk MVP trials. For long-term dura
 - The primary QR destination is the direct business page: `/r/[slug]`.
 - Legacy `/s/[slug]` links still redirect for compatibility.
 - Analytics are tracked when a business review page loads and when redirect buttons are clicked.
+- `basic` businesses route happy customers directly to Google.
+- `pro` businesses unlock the photo booster and custom business-type review suggestions.
 - Review suggestions are generated from the business type instead of requiring AI or manual writing.

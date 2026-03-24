@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isBusinessType } from "@/lib/business-types";
+import { isBusinessType, isPlanType } from "@/lib/business-types";
 import { createBusiness, listBusinesses, normalizeWhatsappNumber } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -24,14 +24,15 @@ export async function POST(request: Request) {
 
   const name = body.name?.trim() ?? "";
   const type = body.type?.trim() ?? "";
+  const plan = body.plan?.trim() ?? "";
   const googleReviewLink = body.googleReviewLink?.trim() ?? "";
   const whatsappNumber = body.whatsappNumber?.trim() ?? "";
 
-  if (!name || !type || !googleReviewLink || !whatsappNumber) {
+  if (!name || !type || !plan || !googleReviewLink || !whatsappNumber) {
     return NextResponse.json(
       {
         error:
-          "Name, business type, Google review link, and WhatsApp number are required."
+          "Name, business type, plan, Google review link, and WhatsApp number are required."
       },
       { status: 400 }
     );
@@ -40,6 +41,13 @@ export async function POST(request: Request) {
   if (!isBusinessType(type)) {
     return NextResponse.json(
       { error: "Please choose a valid business type." },
+      { status: 400 }
+    );
+  }
+
+  if (!isPlanType(plan)) {
+    return NextResponse.json(
+      { error: "Please choose a valid plan." },
       { status: 400 }
     );
   }
@@ -61,6 +69,7 @@ export async function POST(request: Request) {
   const business = await createBusiness({
     name,
     type,
+    plan,
     googleReviewLink,
     whatsappNumber
   });

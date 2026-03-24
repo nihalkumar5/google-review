@@ -13,7 +13,7 @@ import {
 } from "@/lib/business-types";
 import { buildReviewPath } from "@/lib/site";
 import { buildSlugPreview } from "@/lib/slug";
-import type { Business, BusinessType } from "@/types/business";
+import type { Business, BusinessType, PlanType } from "@/types/business";
 
 type AdminDashboardProps = {
   initialBusinesses: Business[];
@@ -22,15 +22,18 @@ type AdminDashboardProps = {
 type FormState = {
   name: string;
   type: BusinessType;
+  plan: PlanType;
   googleReviewLink: string;
   whatsappNumber: string;
 };
 
 type FilterValue = "all" | BusinessType;
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 const defaultForm: FormState = {
   name: "",
   type: "cafe",
+  plan: "basic",
   googleReviewLink: "",
   whatsappNumber: ""
 };
@@ -52,6 +55,39 @@ function getTypeAccent(type: BusinessType) {
   }
 }
 
+function getPlanAccent(plan: PlanType) {
+  return plan === "pro"
+    ? "bg-[rgba(244,183,60,0.18)] text-[var(--color-gold-soft)]"
+    : "border border-white/10 text-[var(--color-muted)]";
+}
+
+function getPlanLabel(plan: PlanType, t: Translator) {
+  return t(plan === "pro" ? "common.pro" : "common.basic");
+}
+
+function getPlanPrice(plan: PlanType, t: Translator) {
+  return t(plan === "pro" ? "admin.proPrice" : "admin.basicPrice");
+}
+
+function getPlanSummary(plan: PlanType, t: Translator) {
+  return t(plan === "pro" ? "admin.proSummary" : "admin.basicSummary");
+}
+
+function getPlanFeatures(plan: PlanType, t: Translator) {
+  return plan === "pro"
+    ? [
+        t("admin.proFeatureOne"),
+        t("admin.proFeatureTwo"),
+        t("admin.proFeatureThree"),
+        t("admin.proFeatureFour")
+      ]
+    : [
+        t("admin.basicFeatureOne"),
+        t("admin.basicFeatureTwo"),
+        t("admin.basicFeatureThree")
+      ];
+}
+
 export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
   const { t, locale } = useLanguage();
   const [businesses, setBusinesses] = useState(initialBusinesses);
@@ -71,7 +107,8 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
   }, []);
 
   const previewSlug = buildSlugPreview(form.name);
-  const previewSuggestions = getReviewSuggestions(form.type, locale);
+  const previewSuggestions =
+    form.plan === "pro" ? getReviewSuggestions(form.type, locale) : [];
   const filteredBusinesses =
     filter === "all"
       ? businesses
@@ -82,21 +119,28 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
       positiveClicks:
         accumulator.positiveClicks + business.analytics.positiveClicks,
       negativeClicks:
-        accumulator.negativeClicks + business.analytics.negativeClicks
+        accumulator.negativeClicks + business.analytics.negativeClicks,
+      basicCount: accumulator.basicCount + (business.plan === "basic" ? 1 : 0),
+      proCount: accumulator.proCount + (business.plan === "pro" ? 1 : 0)
     }),
     {
       scans: 0,
       positiveClicks: 0,
-      negativeClicks: 0
+      negativeClicks: 0,
+      basicCount: 0,
+      proCount: 0
     }
   );
   const highlightedBusiness = createdBusiness ?? businesses[0] ?? null;
   const highlightedType = highlightedBusiness?.type ?? form.type;
+  const highlightedPlan = highlightedBusiness?.plan ?? form.plan;
   const highlightedName = highlightedBusiness?.name || form.name || "Cafe XYZ";
   const highlightedSlug = highlightedBusiness?.slug ?? previewSlug;
   const highlightedPath = buildReviewPath(highlightedSlug);
   const highlightedLink = baseUrl ? `${baseUrl}${highlightedPath}` : highlightedPath;
-  const highlightedSuggestions = getReviewSuggestions(highlightedType, locale);
+  const highlightedSuggestions =
+    highlightedPlan === "pro" ? getReviewSuggestions(highlightedType, locale) : [];
+  const highlightedPlanFeatures = getPlanFeatures(highlightedPlan, t);
 
   async function handleCopy(value: string, key: string) {
     await navigator.clipboard.writeText(value);
@@ -192,6 +236,15 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                 </p>
               </div>
             </div>
+
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4 text-sm text-[var(--color-muted)]">
+              <span className="rounded-full border border-white/10 px-3 py-1">
+                {totals.basicCount} {t("common.basic")}
+              </span>
+              <span className="rounded-full border border-white/10 px-3 py-1">
+                {totals.proCount} {t("common.pro")}
+              </span>
+            </div>
           </div>
         </section>
 
@@ -261,6 +314,67 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                 </div>
               </div>
 
+              <div>
+                <span className="mb-2 block text-sm font-medium text-white">
+                  {t("admin.plan")}
+                </span>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {(["basic", "pro"] as PlanType[]).map((plan) => {
+                    const isActive = form.plan === plan;
+                    const features = getPlanFeatures(plan, t);
+
+                    return (
+                      <button
+                        key={plan}
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            plan
+                          }))
+                        }
+                        className={`rounded-[28px] border p-5 text-left transition ${
+                          isActive
+                            ? "border-[var(--color-gold)] bg-[rgba(244,183,60,0.09)]"
+                            : "border-white/10 bg-black/10 hover:border-white/20 hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-display text-2xl font-semibold text-white">
+                              {getPlanLabel(plan, t)}
+                            </p>
+                            <p className="mt-1 text-sm text-[var(--color-gold-soft)]">
+                              {getPlanPrice(plan, t)}
+                            </p>
+                          </div>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
+                              plan
+                            )}`}
+                          >
+                            {getPlanLabel(plan, t)}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+                          {getPlanSummary(plan, t)}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {features.map((feature) => (
+                            <span
+                              key={feature}
+                              className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/75"
+                            >
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-white">
                   {t("admin.googleLink")}
@@ -306,31 +420,48 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                      {t("admin.smartSuggestions")}
+                      {form.plan === "pro"
+                        ? t("admin.smartSuggestions")
+                        : t("admin.planIncludes")}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                      {t("admin.suggestionsHelp")}
+                      {form.plan === "pro"
+                        ? t("admin.suggestionsHelp")
+                        : t("admin.basicFlowBody")}
                     </p>
                   </div>
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getTypeAccent(
-                      form.type
+                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
+                      form.plan
                     )}`}
                   >
-                    {getBusinessTypeLabel(form.type, locale)}
+                    {getPlanLabel(form.plan, t)}
                   </span>
                 </div>
 
-                <div className="mt-4 grid gap-3">
-                  {previewSuggestions.map((suggestion) => (
-                    <div
-                      key={suggestion}
-                      className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3 text-sm leading-6 text-white/85"
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
+                {form.plan === "pro" ? (
+                  <div className="mt-4 grid gap-3">
+                    {previewSuggestions.map((suggestion) => (
+                      <div
+                        key={suggestion}
+                        className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3 text-sm leading-6 text-white/85"
+                      >
+                        {suggestion}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {getPlanFeatures("basic", t).map((feature) => (
+                      <span
+                        key={feature}
+                        className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {message ? (
@@ -371,6 +502,13 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                     )}`}
                   >
                     {getBusinessTypeLabel(highlightedType, locale)}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
+                      highlightedPlan
+                    )}`}
+                  >
+                    {getPlanLabel(highlightedPlan, t)}
                   </span>
                 </div>
                 <p className="mt-3 max-w-lg text-sm leading-7 text-black/65">
@@ -447,18 +585,43 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
 
                 <div className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-black/45">
-                    {t("admin.smartSuggestions")}
+                    {t("admin.planIncludes")}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {highlightedSuggestions.map((suggestion) => (
+                    {highlightedPlanFeatures.map((feature) => (
                       <span
-                        key={suggestion}
+                        key={feature}
                         className="rounded-full bg-black/5 px-4 py-2 text-sm text-black/70"
                       >
-                        {suggestion}
+                        {feature}
                       </span>
                     ))}
                   </div>
+                </div>
+
+                <div className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                    {highlightedPlan === "pro"
+                      ? t("admin.proFlowTitle")
+                      : t("admin.basicFlowTitle")}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-black/70">
+                    {highlightedPlan === "pro"
+                      ? t("admin.proFlowBody")
+                      : t("admin.basicFlowBody")}
+                  </p>
+                  {highlightedPlan === "pro" ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {highlightedSuggestions.map((suggestion) => (
+                        <span
+                          key={suggestion}
+                          className="rounded-full bg-black/5 px-4 py-2 text-sm text-black/70"
+                        >
+                          {suggestion}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -516,7 +679,11 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                 const reviewPageLink = baseUrl
                   ? `${baseUrl}${reviewPagePath}`
                   : reviewPagePath;
-                const suggestions = getReviewSuggestions(business.type, locale);
+                const features = getPlanFeatures(business.plan, t);
+                const suggestions =
+                  business.plan === "pro"
+                    ? getReviewSuggestions(business.type, locale)
+                    : [];
 
                 return (
                   <article
@@ -534,6 +701,13 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
                           )}`}
                         >
                           {getBusinessTypeLabel(business.type, locale)}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${getPlanAccent(
+                            business.plan
+                          )}`}
+                        >
+                          {getPlanLabel(business.plan, t)}
                         </span>
                       </div>
 
@@ -626,18 +800,43 @@ export function AdminDashboard({ initialBusinesses }: AdminDashboardProps) {
 
                       <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
                         <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                          {t("admin.smartSuggestions")}
+                          {t("admin.planIncludes")}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {suggestions.map((suggestion) => (
+                          {features.map((feature) => (
                             <span
-                              key={suggestion}
+                              key={feature}
                               className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
                             >
-                              {suggestion}
+                              {feature}
                             </span>
                           ))}
                         </div>
+                      </div>
+
+                      <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                          {business.plan === "pro"
+                            ? t("admin.proFlowTitle")
+                            : t("admin.basicFlowTitle")}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-white/80">
+                          {business.plan === "pro"
+                            ? t("admin.proFlowBody")
+                            : t("admin.basicFlowBody")}
+                        </p>
+                        {business.plan === "pro" ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {suggestions.map((suggestion) => (
+                              <span
+                                key={suggestion}
+                                className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75"
+                              >
+                                {suggestion}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 

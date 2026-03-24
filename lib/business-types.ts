@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/translations";
-import type { BusinessType } from "@/types/business";
+import type { BusinessType, PlanType } from "@/types/business";
 
 export const businessTypeValues: BusinessType[] = [
   "cafe",
@@ -8,6 +8,8 @@ export const businessTypeValues: BusinessType[] = [
   "gym",
   "hotel"
 ];
+
+export const planTypeValues: PlanType[] = ["basic", "pro"];
 
 const labels: Record<Locale, Record<BusinessType, string>> = {
   en: {
@@ -92,6 +94,10 @@ const photoIdeas: Record<Locale, Record<BusinessType, string[]>> = {
 
 export function isBusinessType(value: string): value is BusinessType {
   return businessTypeValues.includes(value as BusinessType);
+}
+
+export function isPlanType(value: string): value is PlanType {
+  return planTypeValues.includes(value as PlanType);
 }
 
 export function inferBusinessType(source: string) {

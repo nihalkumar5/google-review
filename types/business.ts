@@ -1,6 +1,8 @@
 export const businessTypes = ["cafe", "salon", "clinic", "gym", "hotel"] as const;
+export const planTypes = ["basic", "pro"] as const;
 
 export type BusinessType = (typeof businessTypes)[number];
+export type PlanType = (typeof planTypes)[number];
 
 export type Analytics = {
   scans: number;
@@ -13,6 +15,7 @@ export type Business = {
   slug: string;
   name: string;
   type: BusinessType;
+  plan: PlanType;
   googleReviewLink: string;
   whatsappNumber: string;
   createdAt: string;
@@ -26,6 +29,7 @@ export type Database = {
 export type CreateBusinessInput = {
   name: string;
   type: BusinessType;
+  plan: PlanType;
   googleReviewLink: string;
   whatsappNumber: string;
 };

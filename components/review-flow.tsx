@@ -26,7 +26,9 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
   const typeLabel = getBusinessTypeLabel(business.type, locale);
   const suggestions = getReviewSuggestions(business.type, locale);
   const photoSuggestions = getPhotoSuggestions(business.type, locale);
-  const showChoiceStep = positiveStep === "choice";
+  const isPro = business.plan === "pro";
+  const showChoiceStep = !isPro || positiveStep === "choice";
+  const planLabel = t(business.plan === "pro" ? "common.pro" : "common.basic");
 
   async function handleCopy(suggestion: string) {
     await navigator.clipboard.writeText(suggestion);
@@ -42,7 +44,12 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
   }
 
   function handlePositiveClick() {
-    setPositiveStep("photo");
+    if (isPro) {
+      setPositiveStep("photo");
+      return;
+    }
+
+    handleRedirect("positive");
   }
 
   return (
@@ -57,7 +64,16 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
               {typeLabel}
             </span>
-            {!showChoiceStep ? (
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
+                isPro
+                  ? "bg-[rgba(244,183,60,0.16)] text-[var(--color-gold-soft)]"
+                  : "border border-white/10 text-[var(--color-muted)]"
+              }`}
+            >
+              {planLabel}
+            </span>
+            {isPro && !showChoiceStep ? (
               <span className="rounded-full bg-[rgba(244,183,60,0.16)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold-soft)]">
                 {t("review.photoStepEyebrow")}
               </span>
@@ -115,43 +131,70 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
                 </button>
               </div>
 
-              <div className="mt-8 rounded-[30px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)] sm:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-black/45">
-                      {typeLabel}
-                    </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold">
-                      {t("review.suggestionsTitle")}
-                    </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-black/65">
-                      {t("review.suggestionsBody")}
-                    </p>
+              {isPro ? (
+                <div className="mt-8 rounded-[30px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)] sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                        {typeLabel}
+                      </p>
+                      <h2 className="mt-2 font-display text-2xl font-semibold">
+                        {t("review.suggestionsTitle")}
+                      </h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-black/65">
+                        {t("review.suggestionsBody")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                    {suggestions.map((suggestion) => (
+                      <div
+                        key={suggestion}
+                        className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4"
+                      >
+                        <p className="text-base leading-7 text-black/75">
+                          {suggestion}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(suggestion)}
+                          className="mt-4 inline-flex rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                        >
+                          {copiedSuggestion === suggestion
+                            ? t("common.copied")
+                            : t("review.copySuggestion")}
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
+              ) : (
+                <div className="mt-8 rounded-[30px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)] sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                    {planLabel}
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold">
+                    {t("review.basicFlowTitle")}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-black/65">
+                    {t("review.basicFlowBody")}
+                  </p>
 
-                <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                  {suggestions.map((suggestion) => (
-                    <div
-                      key={suggestion}
-                      className="rounded-[24px] border border-black/10 bg-black/[0.03] p-4"
-                    >
-                      <p className="text-base leading-7 text-black/75">
-                        {suggestion}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(suggestion)}
-                        className="mt-4 inline-flex rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
-                      >
-                        {copiedSuggestion === suggestion
-                          ? t("common.copied")
-                          : t("review.copySuggestion")}
-                      </button>
-                    </div>
-                  ))}
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {[t("admin.basicFeatureOne"), t("admin.basicFeatureTwo"), t("admin.basicFeatureThree")].map(
+                      (feature) => (
+                        <span
+                          key={feature}
+                          className="rounded-full bg-black/5 px-4 py-2 text-sm text-black/70"
+                        >
+                          {feature}
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           ) : (
             <div className="mt-8 grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">

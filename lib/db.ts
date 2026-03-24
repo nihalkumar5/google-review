@@ -7,7 +7,8 @@ import path from "path";
 import {
   getDefaultWhatsAppMessage,
   inferBusinessType,
-  isBusinessType
+  isBusinessType,
+  isPlanType
 } from "@/lib/business-types";
 import { slugify } from "@/lib/slug";
 import type {
@@ -149,6 +150,10 @@ function sanitizeBusiness(
     slug,
     name,
     type,
+    plan:
+      typeof raw.plan === "string" && isPlanType(raw.plan)
+        ? raw.plan
+        : "basic",
     googleReviewLink:
       typeof raw.googleReviewLink === "string" && raw.googleReviewLink.trim()
         ? raw.googleReviewLink.trim()
@@ -221,6 +226,7 @@ export async function createBusiness(input: CreateBusinessInput) {
       slug,
       name: input.name.trim(),
       type: input.type,
+      plan: input.plan,
       googleReviewLink: input.googleReviewLink.trim(),
       whatsappNumber: normalizeWhatsappNumber(input.whatsappNumber),
       createdAt: new Date().toISOString(),
