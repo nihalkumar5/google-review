@@ -10,6 +10,7 @@ type QrPreviewProps = {
   downloadName: string;
   downloadLabel?: string;
   compact?: boolean;
+  size?: "default" | "compact" | "showcase";
 };
 
 export function QrPreview({
@@ -17,15 +18,19 @@ export function QrPreview({
   label,
   downloadName,
   downloadLabel = "Download QR",
-  compact = false
+  compact = false,
+  size = "default"
 }: QrPreviewProps) {
   const [dataUrl, setDataUrl] = useState("");
+  const resolvedSize = compact ? "compact" : size;
+  const qrWidth =
+    resolvedSize === "compact" ? 180 : resolvedSize === "showcase" ? 360 : 320;
 
   useEffect(() => {
     let isActive = true;
 
     QRCode.toDataURL(url, {
-      width: compact ? 180 : 320,
+      width: qrWidth,
       margin: 1,
       color: {
         dark: "#13110f",
@@ -40,12 +45,16 @@ export function QrPreview({
     return () => {
       isActive = false;
     };
-  }, [compact, url]);
+  }, [qrWidth, url]);
 
   return (
     <div
-      className={`overflow-hidden rounded-[28px] border border-black/5 bg-[var(--color-paper)] p-4 ${
-        compact ? "w-[140px]" : "w-full max-w-[280px]"
+      className={`overflow-hidden rounded-[28px] border border-black/5 bg-[var(--color-paper)] ${
+        resolvedSize === "compact"
+          ? "w-[140px] p-4"
+          : resolvedSize === "showcase"
+            ? "w-full max-w-[360px] p-5 shadow-halo"
+            : "w-full max-w-[280px] p-4"
       }`}
     >
       {dataUrl ? (
@@ -53,15 +62,27 @@ export function QrPreview({
           <Image
             src={dataUrl}
             alt={`QR code for ${label}`}
-            width={compact ? 180 : 320}
-            height={compact ? 180 : 320}
+            width={qrWidth}
+            height={qrWidth}
             className="h-auto w-full rounded-2xl"
             unoptimized
           />
+          {resolvedSize === "showcase" ? (
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                Scan-ready QR
+              </p>
+              <p className="mt-2 font-display text-xl font-semibold text-[var(--color-ink)]">
+                {label}
+              </p>
+            </div>
+          ) : null}
           <a
             href={dataUrl}
             download={`${downloadName}.png`}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+            className={`mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--color-ink)] px-4 font-semibold text-white transition hover:bg-black ${
+              resolvedSize === "showcase" ? "py-3 text-base" : "py-2 text-sm"
+            }`}
           >
             {downloadLabel}
           </a>

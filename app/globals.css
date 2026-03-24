@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-body: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Arial Narrow", "Avenir Next Condensed", "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Sora", "Avenir Next Condensed", "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
   --color-ink: #141210;
   --color-ink-soft: #1d1a17;
   --color-paper: #f7f2e8;

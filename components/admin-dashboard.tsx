@@ -1012,9 +1012,9 @@ export function AdminDashboard({
                 return (
                   <article
                     key={business.id}
-                    className="grid gap-6 px-6 py-6 sm:px-8 lg:grid-cols-[1.1fr_1.05fr_auto]"
+                    className="grid gap-6 px-6 py-6 sm:px-8 lg:grid-cols-[0.92fr_1.08fr]"
                   >
-                    <div>
+                    <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
                         <h3 className="font-display text-2xl font-semibold text-white">
                           {business.name}
@@ -1035,7 +1035,7 @@ export function AdminDashboard({
                         </span>
                       </div>
 
-                      <div className="mt-4 grid gap-3 text-sm text-[var(--color-muted)] sm:grid-cols-2">
+                      <div className="grid gap-3 text-sm text-[var(--color-muted)] sm:grid-cols-2">
                         <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
                           <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
                             {t("admin.slugPreview")}
@@ -1054,7 +1054,7 @@ export function AdminDashboard({
                         </div>
                       </div>
 
-                      <div className="mt-4 rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
+                      <div className="rounded-[22px] border border-white/10 bg-black/10 px-4 py-4">
                         <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
                           {t("admin.googleDestination")}
                         </p>
@@ -1092,6 +1092,16 @@ export function AdminDashboard({
                           >
                             {t("admin.open")}
                           </a>
+                        </div>
+
+                        <div className="mt-5 flex justify-center lg:justify-start">
+                          <QrPreview
+                            url={reviewPageLink}
+                            label={business.name}
+                            downloadName={business.slug}
+                            downloadLabel={t("admin.download")}
+                            size="showcase"
+                          />
                         </div>
                       </div>
 
@@ -1209,16 +1219,6 @@ export function AdminDashboard({
                           </div>
                         ) : null}
                       </div>
-                    </div>
-
-                    <div className="flex justify-start lg:justify-end">
-                      <QrPreview
-                        url={reviewPageLink}
-                        label={business.name}
-                        downloadName={business.slug}
-                        downloadLabel={t("admin.download")}
-                        compact
-                      />
                     </div>
                   </article>
                 );
