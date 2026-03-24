@@ -238,3 +238,34 @@ body {
 .text-balance {
   text-wrap: balance;
 }
+
+.cta-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    118deg,
+    transparent 0%,
+    transparent 34%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 66%,
+    transparent 100%
+  );
+  transform: translateX(-140%);
+  animation: cta-sheen 2.9s ease-in-out infinite;
+}
+
+@keyframes cta-sheen {
+  0%,
+  100% {
+    transform: translateX(-140%);
+  }
+  55% {
+    transform: translateX(140%);
+  }
+}

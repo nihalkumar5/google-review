@@ -2,9 +2,11 @@
 
 import { useState, type CSSProperties } from "react";
 
+import { BusinessVisualCard } from "@/components/business-visual-card";
 import { SiteHeader } from "@/components/site-header";
 import { useLanguage } from "@/components/language-provider";
 import { getBusinessTheme } from "@/lib/business-theme";
+import { getVisualShowcaseTitle } from "@/lib/business-visuals";
 import {
   getBusinessTypeLabel,
   getPhotoSuggestions,
@@ -27,10 +29,11 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
   const typeLabel = getBusinessTypeLabel(business.type, locale);
   const suggestions = getReviewSuggestions(business.type, locale);
   const photoSuggestions = getPhotoSuggestions(business.type, locale);
+  const showcaseTitle = getVisualShowcaseTitle(business.type, locale);
   const isPro = business.plan === "pro";
-  const showChoiceStep = !isPro || positiveStep === "choice";
+  const showChoiceStep = positiveStep === "choice";
   const currentStep = showChoiceStep ? 1 : 2;
-  const totalSteps = isPro ? 2 : 1;
+  const totalSteps = 2;
   const planLabel = t(business.plan === "pro" ? "common.pro" : "common.basic");
   const theme = getBusinessTheme(business.type);
   const themeStyle = {
@@ -214,6 +217,18 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
                       </p>
                     </div>
 
+                    <div className="mt-6">
+                      <BusinessVisualCard
+                        type={business.type}
+                        businessName={business.name}
+                        label={t("review.sampleVisualLabel")}
+                        title={photoSuggestions[0] || showcaseTitle}
+                        description={t("review.sampleVisualBody")}
+                        chips={photoSuggestions}
+                        mode="photo"
+                      />
+                    </div>
+
                     <div className="quick-scroll mt-5">
                       {photoSuggestions.map((idea) => (
                         <div
@@ -225,14 +240,21 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
                       ))}
                     </div>
 
-                    <div className="mt-6 grid gap-3">
+                    <p className="mt-6 text-sm leading-6 text-black/60">
+                      {t("review.photoActionHint")}
+                    </p>
+
+                    <div className="mt-4 grid gap-3">
                       <button
                         type="button"
                         onClick={() => handleRedirect("positive")}
                         disabled={redirecting !== null}
-                        className="inline-flex items-center justify-center rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-80"
+                        className="cta-sheen group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-80"
                       >
-                        {t("review.continueToGoogle")}
+                        <span>{t("review.continueToGoogle")}</span>
+                        <span className="text-base transition-transform duration-200 group-hover:translate-x-1">
+                          →
+                        </span>
                       </button>
                       <button
                         type="button"
@@ -249,31 +271,112 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
 
               <div>
                 {showChoiceStep ? (
-                  isPro ? (
-                    <div className="h-full rounded-[34px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)] sm:p-6">
-                      <p className="text-xs uppercase tracking-[0.18em] text-black/45">
-                        {t("review.suggestionsTitle")}
+                  <div className="space-y-5">
+                    <BusinessVisualCard
+                      type={business.type}
+                      businessName={business.name}
+                      label={planLabel}
+                      title={t("review.sceneTitle", { type: typeLabel })}
+                      description={t("review.sceneBody")}
+                      chips={photoSuggestions}
+                    />
+
+                    {isPro ? (
+                      <div className="rounded-[34px] bg-[var(--color-paper)] p-5 text-[var(--color-ink)] sm:p-6">
+                        <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+                          {t("review.suggestionsTitle")}
+                        </p>
+                        <h2 className="mt-3 font-display text-3xl font-semibold">
+                          {t("review.quickActionTitle")}
+                        </h2>
+                        <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">
+                          {t("review.quickActionBody")}
+                        </p>
+
+                        <div className="quick-scroll mt-6">
+                          {suggestions.map((suggestion) => (
+                            <div
+                              key={suggestion}
+                              className="min-w-[260px] rounded-[28px] border border-black/10 bg-black/[0.03] p-4 transition hover:-translate-y-1 hover:bg-black/[0.05]"
+                            >
+                              <p className="text-base leading-7 text-black/75">
+                                {suggestion}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(suggestion)}
+                                className="mt-5 inline-flex rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                              >
+                                {copiedSuggestion === suggestion
+                                  ? t("common.copied")
+                                  : t("review.copySuggestion")}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-[34px] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                          {showcaseTitle}
+                        </p>
+                        <h2 className="mt-3 font-display text-3xl font-semibold text-white">
+                          {t("review.basicFlowTitle")}
+                        </h2>
+                        <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
+                          {t("review.basicFlowBody")}
+                        </p>
+
+                        <div className="mt-6 flex flex-wrap gap-2">
+                          {[t("admin.basicFeatureOne"), t("admin.basicFeatureTwo"), t("admin.basicFeatureThree")].map(
+                            (feature) => (
+                              <span
+                                key={feature}
+                                className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80"
+                              >
+                                {feature}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    <BusinessVisualCard
+                      type={business.type}
+                      businessName={business.name}
+                      label={t("review.sampleVisualLabel")}
+                      title={photoSuggestions[1] || showcaseTitle}
+                      description={t("review.sampleVisualBody")}
+                      chips={photoSuggestions}
+                    />
+
+                    <div className="rounded-[34px] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                        {typeLabel}
                       </p>
-                      <h2 className="mt-3 font-display text-3xl font-semibold">
-                        {t("review.quickActionTitle")}
+                      <h2 className="mt-3 font-display text-3xl font-semibold text-white">
+                        {isPro ? t("review.comboTitle") : t("review.photoIdeasTitle")}
                       </h2>
-                      <p className="mt-3 max-w-xl text-sm leading-6 text-black/65">
-                        {t("review.quickActionBody")}
+                      <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
+                        {isPro ? t("review.comboBody") : t("review.photoIdeasBody")}
                       </p>
 
                       <div className="quick-scroll mt-6">
-                        {suggestions.map((suggestion) => (
+                        {(isPro ? suggestions : photoSuggestions).map((suggestion) => (
                           <div
                             key={suggestion}
-                            className="min-w-[260px] rounded-[28px] border border-black/10 bg-black/[0.03] p-4 transition hover:-translate-y-1 hover:bg-black/[0.05]"
+                            className="min-w-[260px] rounded-[28px] border border-white/10 bg-white/[0.04] p-4 transition hover:-translate-y-1 hover:bg-white/[0.06]"
                           >
-                            <p className="text-base leading-7 text-black/75">
+                            <p className="text-base leading-7 text-white/88">
                               {suggestion}
                             </p>
                             <button
                               type="button"
                               onClick={() => handleCopy(suggestion)}
-                              className="mt-5 inline-flex rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                              className="mt-5 inline-flex rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
                             >
                               {copiedSuggestion === suggestion
                                 ? t("common.copied")
@@ -282,65 +385,6 @@ export function ReviewFlow({ business }: ReviewFlowProps) {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="h-full rounded-[34px] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                        {planLabel}
-                      </p>
-                      <h2 className="mt-3 font-display text-3xl font-semibold text-white">
-                        {t("review.basicFlowTitle")}
-                      </h2>
-                      <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
-                        {t("review.basicFlowBody")}
-                      </p>
-
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        {[t("admin.basicFeatureOne"), t("admin.basicFeatureTwo"), t("admin.basicFeatureThree")].map(
-                          (feature) => (
-                            <span
-                              key={feature}
-                              className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/80"
-                            >
-                              {feature}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )
-                ) : (
-                  <div className="h-full rounded-[34px] border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                      {typeLabel}
-                    </p>
-                    <h2 className="mt-3 font-display text-3xl font-semibold text-white">
-                      {t("review.comboTitle")}
-                    </h2>
-                    <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--color-muted)]">
-                      {t("review.comboBody")}
-                    </p>
-
-                    <div className="quick-scroll mt-6">
-                      {suggestions.map((suggestion) => (
-                        <div
-                          key={suggestion}
-                          className="min-w-[260px] rounded-[28px] border border-white/10 bg-white/[0.04] p-4 transition hover:-translate-y-1 hover:bg-white/[0.06]"
-                        >
-                          <p className="text-base leading-7 text-white/88">
-                            {suggestion}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(suggestion)}
-                            className="mt-5 inline-flex rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
-                          >
-                            {copiedSuggestion === suggestion
-                              ? t("common.copied")
-                              : t("review.copySuggestion")}
-                          </button>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 )}
