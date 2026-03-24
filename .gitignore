@@ -1,0 +1,12 @@
+.next
+.next-app
+node_modules
+.vercel
+dist
+tsconfig.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+data/db.json

@@ -1,0 +1,46 @@
+{
+  "businesses": [
+    {
+      "id": "sample-1",
+      "slug": "sunrise-dental-studio",
+      "name": "Sunrise Dental Studio",
+      "type": "clinic",
+      "googleReviewLink": "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4",
+      "whatsappNumber": "+919876543210",
+      "createdAt": "2026-03-24T10:30:00.000Z",
+      "analytics": {
+        "scans": 18,
+        "positiveClicks": 11,
+        "negativeClicks": 2
+      }
+    },
+    {
+      "id": "sample-2",
+      "slug": "urban-brew-cafe",
+      "name": "Urban Brew Cafe",
+      "type": "cafe",
+      "googleReviewLink": "https://search.google.com/local/writereview?placeid=ChIJLfySpTOuEmsRsc_JfJtljdc",
+      "whatsappNumber": "+919901112233",
+      "createdAt": "2026-03-23T08:15:00.000Z",
+      "analytics": {
+        "scans": 27,
+        "positiveClicks": 19,
+        "negativeClicks": 3
+      }
+    },
+    {
+      "id": "sample-3",
+      "slug": "motion-fit-gym",
+      "name": "Motion Fit Gym",
+      "type": "gym",
+      "googleReviewLink": "https://search.google.com/local/writereview?placeid=ChIJ2eUgeAK6j4ARbn5u_wAGqWA",
+      "whatsappNumber": "+919900778899",
+      "createdAt": "2026-03-22T07:00:00.000Z",
+      "analytics": {
+        "scans": 33,
+        "positiveClicks": 21,
+        "negativeClicks": 4
+      }
+    }
+  ]
+}
